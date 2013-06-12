@@ -276,6 +276,7 @@ int buffer_append_long_hex(buffer *b, unsigned long value) {
 	buf = b->ptr + (b->used - 1);
 	b->used += shift;
 
+	/* 一个16进制位对应4个二进制位 */
 	shift <<= 2;
 	while (shift > 0) {
 		shift -= 4;
@@ -321,6 +322,7 @@ int LI_ltostr(char *buf, long val) {
 int buffer_append_long(buffer *b, long val) {
 	if (!b) return -1;
 
+	/* XXX 为什么要预留32的空间？ */
 	buffer_prepare_append(b, 32);
 	if (b->used == 0)
 		b->used++;
@@ -396,8 +398,12 @@ char int2hex(char c) {
 char hex2int(unsigned char hex) {
 	hex = hex - '0';
 	if (hex > 9) {
-		hex = (hex + '0' - 1) | 0x20;
+		hex = (hex + '0' - 1) | 0x20; /* 将A-Z转成a-z */
 		hex = hex - 'a' + 11;
+		/* 与下面的写法同义
+		 * hex = (hex + '0') | 0x20;
+		 * hex = hex - 'a' + 10;
+		 */
 	}
 	if (hex > 15)
 		hex = 0xFF;
@@ -519,6 +525,7 @@ int buffer_is_empty(buffer *b) {
  * alignment properly.
  */
 
+/* 字符串比较 */
 int buffer_is_equal(buffer *a, buffer *b) {
 	if (a->used != b->used) return 0;
 	if (a->used == 0) return 1;
@@ -810,11 +817,11 @@ int buffer_append_string_encoded(buffer *b, const char *s, size_t s_len, buffer_
 			switch(encoding) {
 			case ENCODING_REL_URI:
 			case ENCODING_REL_URI_PART:
-				d_len += 3;
+				d_len += 3;  /* %3f */
 				break;
 			case ENCODING_HTML:
 			case ENCODING_MINIMAL_XML:
-				d_len += 6;
+				d_len += 6;  /* &#x3f; */
 				break;
 			case ENCODING_HTTP_HEADER:
 			case ENCODING_HEX:
@@ -900,6 +907,9 @@ static int buffer_urldecode_internal(buffer *url, int is_query) {
 					high = (high << 4) | low;
 
 					/* map control-characters out */
+					/* high 是无符号char，
+					 * 但大于127的字符不是control-characters，
+					 * 所以无需判断high >= 127 */
 					if (high < 32 || high == 127) high = '_';
 
 					*dst = high;
@@ -944,7 +954,7 @@ int buffer_path_simplify(buffer *dest, buffer *src)
 	int toklen;
 	char c, pre1;
 	char *start, *slash, *walk, *out;
-	unsigned short pre;
+	unsigned short pre;  /* 前两个字符的内容，妙 */
 
 	if (src == NULL || src->ptr == NULL || dest == NULL)
 		return -1;
@@ -991,6 +1001,7 @@ int buffer_path_simplify(buffer *dest, buffer *src)
 	while (1) {
 		if (c == '/' || c == '\0') {
 			toklen = out - slash;
+			/* 对应 /../的情况，此时需要找到slash目录的父目录 */
 			if (toklen == 3 && pre == (('.' << 8) | '.')) {
 				out = slash;
 				if (out > start) {
@@ -1002,6 +1013,10 @@ int buffer_path_simplify(buffer *dest, buffer *src)
 
 				if (c == '\0')
 					out++;
+		    /* 保持在slash目录，// 或者 /./
+		     * toklen == 1 对应 //
+		     * pre == (('/' << 8) | '.')) 对应 /./
+		     */
 			} else if (toklen == 1 || pre == (('/' << 8) | '.')) {
 				out = slash;
 				if (c == '\0')
