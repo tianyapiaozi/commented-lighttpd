@@ -194,6 +194,7 @@ int chunkqueue_append_buffer(chunkqueue *cq, buffer *mem) {
 	return 0;
 }
 
+/* mem的释放由cq进行 */
 int chunkqueue_append_buffer_weak(chunkqueue *cq, buffer *mem) {
 	chunk *c;
 

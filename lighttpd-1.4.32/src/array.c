@@ -81,6 +81,9 @@ data_unset *array_pop(array *a) {
 	return du;
 }
 
+/* 如果可以找到，返回key在array中data数组的下标，并在*rndx中保存array中sorted数组的下标
+ * 如果找不到，则返回-1，并在*rndx中保存应该插入sorted的位置，
+ */
 static int array_get_index(array *a, const char *key, size_t keylen, int *rndx) {
 	int ndx = -1;
 	int i, pos = 0;
@@ -230,8 +233,8 @@ int array_insert_unique(array *a, data_unset *str) {
 
 	a->data[a->used++] = str;
 
-	if (pos != ndx &&
-	    ((pos < 0) ||
+	if (pos != ndx && /* pos != ndx 表示插入中间的某个位置 */
+	    ((pos < 0) || /* pos < 0 表示在开始位置插入 */
 	     buffer_caseless_compare(str->key->ptr, str->key->used, a->data[a->sorted[pos]]->key->ptr, a->data[a->sorted[pos]]->key->used) > 0)) {
 		pos++;
 	}

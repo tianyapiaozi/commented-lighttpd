@@ -12,6 +12,8 @@ static data_unset *data_config_copy(const data_unset *s) {
 	buffer_copy_string_buffer(ds->comp_key, src->comp_key);
 	array_free(ds->value);
 	ds->value = array_init_array(src->value);
+	/* XXX ds->op 没复制？ */
+	/* XXX ds->string 没复制？ */
 	return (data_unset *)ds;
 }
 
@@ -126,6 +128,7 @@ data_config *data_config_init(void) {
 	ds->value = array_init();
 	ds->childs = array_init();
 	ds->childs->is_weakref = 1;
+	/* XXX ds->string 留空了 */
 
 	ds->copy = data_config_copy;
 	ds->free = data_config_free;

@@ -123,7 +123,7 @@ int light_isalnum(int c);
 #define BUFFER_APPEND_SLASH(x) \
 	if (x->used > 1 && x->ptr[x->used - 2] != '/') { BUFFER_APPEND_STRING_CONST(x, "/"); }
 
-#define CONST_STR_LEN(x) x, x ? sizeof(x) - 1 : 0
+#define CONST_STR_LEN(x) x, x ? sizeof(x) - 1 : 0  /* 得到字符串指针及字符串长度 */
 #define CONST_BUF_LEN(x) x->ptr, x->used ? x->used - 1 : 0
 
 
