@@ -310,6 +310,7 @@ chunk *chunkqueue_get_append_tempfile(chunkqueue *cq) {
 		}
 	}
 
+    /* 可以将template赋值给c->file.name，可以省一次copy*/
 	buffer_copy_string_buffer(c->file.name, template);
 	c->file.length = 0;
 
